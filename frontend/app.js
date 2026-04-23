@@ -159,12 +159,25 @@ els.applyVaccineBtn.addEventListener('click', async () => {
         return showToast('Solo los veterinarios o admins pueden aplicar vacunas', 'error');
     }
     
+    // Para la prueba C: Seleccionamos una mascota que realmente atienda este veterinario
+    // para no violar la política de seguridad RLS (Row-Level Security)
+    let petId = 1;
+    let petName = 'Firulais';
+    
+    if (session.id === '2') { // Dra. García
+        petId = 4;
+        petName = 'Misifú';
+    } else if (session.id === '3') { // Dr. Méndez
+        petId = 7;
+        petName = 'Rocky';
+    }
+    
     try {
         const res = await fetch(`${API_URL}/vacunas`, {
             method: 'POST',
             headers: getHeaders(),
             body: JSON.stringify({
-                mascota_id: 1, // Firulais
+                mascota_id: petId,
                 vacuna_id: 1,  // Antirrábica
                 fecha_aplicacion: new Date().toISOString().split('T')[0],
                 costo_cobrado: 350.00
@@ -173,7 +186,7 @@ els.applyVaccineBtn.addEventListener('click', async () => {
         
         if (!res.ok) throw new Error(await res.text());
         
-        showToast('Vacuna aplicada con éxito a Firulais. Caché invalidado.');
+        showToast(`Vacuna aplicada con éxito a ${petName}. Caché invalidado.`);
         loadVacunacion(); // Recargar la tabla
     } catch (err) {
         showToast('Error al aplicar vacuna: ' + err.message, 'error');

@@ -23,7 +23,7 @@ GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO admin_role;
 GRANT SELECT, INSERT, UPDATE ON duenos, mascotas, citas, vet_atiende_mascota TO recepcion_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO recepcion_role;
 
-GRANT SELECT ON mascotas, inventario_vacunas, vet_atiende_mascota, duenos TO vet_role;
+GRANT SELECT ON mascotas, inventario_vacunas, vet_atiende_mascota, duenos, v_mascotas_vacunacion_pendiente TO vet_role;
 GRANT SELECT, INSERT, UPDATE ON citas, vacunas_aplicadas, historial_movimientos TO vet_role;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO vet_role;
 

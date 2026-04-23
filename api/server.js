@@ -39,7 +39,7 @@ const queryWithContext = async (user, queryText, queryParams) => {
     await client.query(`SET LOCAL ROLE ${user.role}`);
     
     // Setear el ID del usuario en la sesión para las políticas RLS
-    await client.query(`SET LOCAL app.current_user_id = $1`, [user.id]);
+    await client.query(`SELECT set_config('app.current_user_id', $1::text, true)`, [user.id]);
     
     // Ejecutar la consulta del endpoint
     const result = await client.query(queryText, queryParams);
@@ -76,17 +76,23 @@ app.get('/api/mascotas', requireAuth, async (req, res) => {
 
 // Redis Endpoint
 app.get('/api/vacunacion-pendiente', requireAuth, async (req, res) => {
+  const start = Date.now();
+  const timestamp = new Date().toISOString();
+  console.log(`\n[${timestamp}] GET /api/vacunacion-pendiente`);
+
   try {
     const cacheKey = `vacunacion_pendiente:${req.user.role}:${req.user.id}`;
     
     // 1. Intentar obtener de Redis
     const cachedData = await redisClient.get(cacheKey);
     if (cachedData) {
-      console.log(`[CACHE HIT] ${cacheKey}`);
-      return res.json(JSON.parse(cachedData));
+      console.log(`[${new Date().toISOString()}] [CACHE HIT] ${cacheKey}`);
+      res.json(JSON.parse(cachedData));
+      console.log(`[${new Date().toISOString()}] Cache Response completada. Latencia total: ${Date.now() - start}ms (Latencia típica de Redis)`);
+      return;
     }
 
-    console.log(`[CACHE MISS] ${cacheKey}`);
+    console.log(`[${new Date().toISOString()}] [CACHE MISS] ${cacheKey}`);
 
     // 2. Si no hay cache, consultar DB con el contexto del RLS
     const result = await queryWithContext(req.user, 'SELECT * FROM v_mascotas_vacunacion_pendiente', []);
@@ -95,6 +101,7 @@ app.get('/api/vacunacion-pendiente', requireAuth, async (req, res) => {
     await redisClient.setEx(cacheKey, 300, JSON.stringify(result.rows));
 
     res.json(result.rows);
+    console.log(`[${new Date().toISOString()}] DB Query completada. Latencia total: ${Date.now() - start}ms (Latencia típica de BD)`);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -102,6 +109,10 @@ app.get('/api/vacunacion-pendiente', requireAuth, async (req, res) => {
 
 // Endpoint para aplicar vacunas e invalidar caché
 app.post('/api/vacunas', requireAuth, async (req, res) => {
+  const start = Date.now();
+  const timestamp = new Date().toISOString();
+  console.log(`\n[${timestamp}] POST /api/vacunas`);
+
   try {
     const { mascota_id, vacuna_id, fecha_aplicacion, costo_cobrado } = req.body;
     
@@ -114,12 +125,13 @@ app.post('/api/vacunas', requireAuth, async (req, res) => {
     const params = [mascota_id, vacuna_id, req.user.id, fecha_aplicacion, costo_cobrado];
     
     const result = await queryWithContext(req.user, queryText, params);
+    console.log(`[${new Date().toISOString()}] DB Insert completado en ${Date.now() - start}ms.`);
     
     // Invalidación del Caché (estrategia: borrar todas las llaves de vacunacion_pendiente porque la base de datos cambió)
     const keys = await redisClient.keys('vacunacion_pendiente:*');
     if (keys.length > 0) {
       await redisClient.del(keys);
-      console.log(`[CACHE INVALIDADO] Se eliminaron ${keys.length} entradas de vacunacion_pendiente`);
+      console.log(`[${new Date().toISOString()}] [CACHE INVALIDADO] Se eliminaron ${keys.length} entradas de vacunacion_pendiente`);
     }
 
     res.json({ message: 'Vacuna registrada exitosamente', data: result.rows[0] });
