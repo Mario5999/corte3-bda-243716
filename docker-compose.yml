@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: vet_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: clinica_vet
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: vet_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: vet_api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - DB_USER=postgres
+      - DB_HOST=db
+      - DB_NAME=clinica_vet
+      - DB_PASSWORD=password
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      # Montamos el frontend para que el server express estático lo pueda servir
+      - ./frontend:/usr/src/frontend
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

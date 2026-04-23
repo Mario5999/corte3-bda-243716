@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clínica Veterinaria</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Auth Selector -->
+        <header class="auth-header glass-panel">
+            <div class="logo">🐾 Clínica Vet Secure</div>
+            <div class="auth-controls">
+                <label>Iniciar Sesión como:</label>
+                <select id="userSelector">
+                    <option value="" disabled selected>Seleccione usuario...</option>
+                    <option value="1|vet_role">Dr. López (Veterinario 1)</option>
+                    <option value="2|vet_role">Dra. García (Veterinaria 2)</option>
+                    <option value="3|vet_role">Dr. Méndez (Veterinario 3)</option>
+                    <option value="5|recepcion_role">María (Recepción)</option>
+                    <option value="99|admin_role">Administrador (Root)</option>
+                </select>
+                <button id="loginBtn" class="btn primary">Ingresar</button>
+            </div>
+            <div id="currentUserDisplay" class="current-user hidden">
+                <span class="user-badge" id="userBadge"></span>
+                <button id="logoutBtn" class="btn text">Salir</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main id="mainContent" class="hidden">
+            <!-- Sidebar -->
+            <nav class="sidebar glass-panel">
+                <ul>
+                    <li class="active" data-view="mascotas">Búsqueda de Mascotas</li>
+                    <li data-view="vacunacion">Vacunación Pendiente</li>
+                </ul>
+            </nav>
+
+            <!-- Views -->
+            <div class="view-container glass-panel">
+                
+                <!-- View: Mascotas -->
+                <section id="view-mascotas" class="view active">
+                    <h2>Búsqueda de Mascotas</h2>
+                    <p class="subtitle">Prueba de Inyección SQL y Políticas RLS</p>
+                    <div class="search-bar">
+                        <input type="text" id="searchInput" placeholder="Buscar por nombre (Ej. Firulais o '; DROP TABLE...)">
+                        <button id="searchBtn" class="btn primary">Buscar</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="mascotasTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nombre</th>
+                                    <th>Especie</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- View: Vacunacion Pendiente -->
+                <section id="view-vacunacion" class="view hidden">
+                    <h2>Vacunación Pendiente</h2>
+                    <p class="subtitle">Consulta a la vista (Prueba de Caché Redis)</p>
+                    <div class="actions">
+                        <button id="loadVacunacionBtn" class="btn primary">Cargar Datos</button>
+                        <button id="applyVaccineBtn" class="btn primary" style="background: #10b981;">Vacunar y Limpiar Caché (Simulado)</button>
+                    </div>
+                    <div class="table-container">
+                        <table id="vacunacionTable">
+                            <thead>
+                                <tr>
+                                    <th>Mascota</th>
+                                    <th>Especie</th>
+                                    <th>Última Vacuna</th>
+                                    <th>Prioridad</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Notificaciones -->
+    <div id="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
